@@ -1,0 +1,123 @@
+{
+  "address": "J3gWhe7BHUuVTSg8HNcEEPzaZYTMLL4oHWJtCDjKp4LD",
+  "metadata": {
+    "name": "class_cal",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "add",
+      "discriminator": [
+        41,
+        249,
+        249,
+        146,
+        197,
+        111,
+        56,
+        181
+      ],
+      "accounts": [
+        {
+          "name": "accounts",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "i32"
+        }
+      ]
+    },
+    {
+      "name": "double",
+      "discriminator": [
+        162,
+        214,
+        74,
+        72,
+        133,
+        109,
+        203,
+        102
+      ],
+      "accounts": [
+        {
+          "name": "accounts",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "account",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AccountShape",
+      "discriminator": [
+        88,
+        0,
+        193,
+        113,
+        213,
+        210,
+        191,
+        140
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "AccountShape",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": "i32"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+/Users/test/Documents/web3/anchor/Calculator/contract/calccontract/target/sbpf-solana-solana/release/libcalccontract.rlib: /Users/test/Documents/web3/anchor/Calculator/contract/calccontract/programs/calccontract/src/lib.rs
