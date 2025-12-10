@@ -7,7 +7,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-calccontract = "J3gWhe7BHUuVTSg8HNcEEPzaZYTMLL4oHWJtCDjKp4LD"
+calccontract = {address = "J3gWhe7BHUuVTSg8HNcEEPzaZYTMLL4oHWJtCDjKp4LD", idl = "./target/idl/class_cal.json"}
 
 [registry]
 url = "https://api.apr.dev"
