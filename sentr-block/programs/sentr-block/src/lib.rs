@@ -12,8 +12,9 @@ pub mod sentr_block {
         msg!("Greetings from: {:?}", ctx.program_id);
         Ok(())
     }
-
+   
 }
+
 
 //create the struct for the init function 
 #[derive(Accounts)]
