@@ -31,7 +31,10 @@ describe("taskify", () => {
 
   it("Is initialized!", async () => {
     const data = "marco"
-    const [pda] = derivePda();
+    const fullpda = derivePda();
+    const [pda] = fullpda;
+    console.log('full pda [0]: ')
+    console.log(fullpda[0]);
     console.log("pda is : " + pda);
     // Add your test here.
     const tx = await program.methods.add(data).accounts({
@@ -41,9 +44,9 @@ describe("taskify", () => {
     const value = await provider.connection.confirmTransaction(tx);
     console.log("value is : ");
     console.log(value);
-    const account = await program.account.customAccount.all();
-    console.log("account: ");
-    console.log(account);
+    const accountinfo = await program.account.customAccount.all();
+    console.log('account info');
+    console.log(accountinfo[0].publicKey)
   });
 
 

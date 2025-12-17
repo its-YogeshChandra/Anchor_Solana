@@ -8,7 +8,10 @@ pub mod taskify {
 
     pub fn add(ctx: Context<Add>, data: String) -> Result<()> {
         ctx.accounts.pda_account.data = data;
-        msg!("Greetings from: {:?}", ctx.program_id);
+        emit!(CreatedPda {
+            pda: ctx.accounts.pda_account.key(),
+            payer: ctx.accounts.payer.key(),
+        });
         Ok(())
     }
 
@@ -25,6 +28,12 @@ pub mod taskify {
         msg!("accounts successfully closed");
         Ok(())
     }
+}
+
+#[event]
+pub struct CreatedPda {
+    pub pda: Pubkey,
+    pub payer: Pubkey,
 }
 
 #[account]
