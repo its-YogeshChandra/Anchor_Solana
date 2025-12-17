@@ -10,6 +10,7 @@ describe("taskify", () => {
 
   const program = anchor.workspace.taskify as Program<Taskify>;
   const mainKeyPair = anchor.web3.Keypair.generate();
+  let imppda = []
 
   before(
     //function to put on the airdrop 
@@ -19,7 +20,7 @@ describe("taskify", () => {
     })
 
   //make the seed Prefix 
-  const seedprefix = Buffer.from("hello_word");
+  const seedprefix = Buffer.from("hello_world");
 
   const derivePda = () => {
     //must match you rust seeds exactly 
@@ -32,6 +33,7 @@ describe("taskify", () => {
   it("Is initialized!", async () => {
     const data = "marco"
     const fullpda = derivePda();
+    imppda.push(fullpda)
     const [pda] = fullpda;
     console.log('full pda [0]: ')
     console.log(fullpda[0]);
@@ -44,13 +46,30 @@ describe("taskify", () => {
     const value = await provider.connection.confirmTransaction(tx);
     console.log("value is : ");
     console.log(value);
-    const accountinfo = await program.account.customAccount.all();
-    console.log('account info');
-    console.log(accountinfo[0].publicKey)
+    const accountinfo = await program.account.customAccount.fetch(pda);
+    assert.equal(accountinfo.data, data)
   });
 
-
   //for updating 
+  it("its updating", async () => {
+    //const
+    const [pdavalue] = imppda[0]
+    const tx = await program.methods.update("figarland").accounts({
+      signer: mainKeyPair.publicKey
+    }).signers([mainKeyPair]).rpc();
+
+    //value is : 
+    const value = await provider.connection.confirmTransaction(tx)
+    console.log("value is : ")
+    console.log(value)
+    const accountdetails = await program.account.customAccount.fetch(pdavalue);
+    console.log("account details : ")
+    console.log(accountdetails)
+    assert.equal(accountdetails.data, "figarland")
+  })
+
+
+  //for updating
   // it("is updating", async () => {
   //
   //   const accounts = await provider.connection.getProgramAccounts(mainKeyPair.publicKey)
