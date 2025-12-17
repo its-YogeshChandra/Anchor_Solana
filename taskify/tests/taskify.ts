@@ -86,5 +86,21 @@ describe("taskify", () => {
   //   assert.equal(account.data, "figarland");
   // })
 
+  //for deleting 
+  it("its deleting", async () => {
+    //deleting function 
+    const tx = await program.methods.data().accounts({
+      receiver: mainKeyPair.publicKey,
+    }).rpc();
 
+    //value is 
+    const value = await provider.connection.confirmTransaction(tx)
+    console.log("the value")
+    console.log(value)
+
+    const accountdetails = await program.account.customAccount.all();
+    console.log("account details")
+    console.log(accountdetails)
+
+  })
 });
