@@ -5,17 +5,19 @@ declare_id!("BaJwzP9zYpBtfFsKvK1YKS8qwAgFc1haABobpgWmUu2R");
 
 #[program]
 pub mod tokenmint {
-    use anchor_spl::token_interface::spl_token_metadata_interface::instruction::emit;
 
     use super::*;
 
     //create mint address
     pub fn createmint(ctx: Context<CreateMint>, decimals: u8) -> Result<()> {
+        msg!("mint created");
         Ok(())
     }
 }
 
+//struct for acount
 #[derive(Accounts)]
+//instruction let one to take input from the arguments itself(layman)
 #[instruction(decimals: u8)]
 pub struct CreateMint<'info> {
     #[account(mut)]
@@ -26,10 +28,6 @@ pub struct CreateMint<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub struct Mint_Authority {
-    data: Pubkey,
-}
-// #[account]
 // pub struct DecimalValue {
 //     data: u8,
 // }
