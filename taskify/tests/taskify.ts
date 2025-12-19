@@ -30,6 +30,7 @@ describe("taskify", () => {
     )
   }
 
+  //is initialized 
   it("Is initialized!", async () => {
     const data = "marco"
     const fullpda = derivePda();
@@ -68,32 +69,14 @@ describe("taskify", () => {
     assert.equal(accountdetails.data, "figarland")
   })
 
-
-  //for updating
-  // it("is updating", async () => {
-  //
-  //   const accounts = await provider.connection.getProgramAccounts(mainKeyPair.publicKey)
-  //   console.log(accounts);
-  //
-  //   const pda = "9GxLZnyNjK5hkUuGzPQFbYTQzpXfq2pZGBLASktFu6L4"
-  //   // await the program 
-  //   await program.methods.update("figarland").accounts({
-  //     signer: pda
-  //   }).signers([mainKeyPair]).rpc();
-  //   const account = await program.account.customAccount.fetch(pda)
-  //
-  //   //assert 
-  //   assert.equal(account.data, "figarland");
-  // })
-
-  //for deleting 
+  //for deleting
   it("its deleting", async () => {
     //deleting function 
     const tx = await program.methods.data().accounts({
       receiver: mainKeyPair.publicKey,
     }).rpc();
 
-    //value is 
+    //find the transaction 
     const value = await provider.connection.confirmTransaction(tx)
     console.log("the value")
     console.log(value)
@@ -101,6 +84,6 @@ describe("taskify", () => {
     const accountdetails = await program.account.customAccount.all();
     console.log("account details")
     console.log(accountdetails)
-
   })
+
 });
