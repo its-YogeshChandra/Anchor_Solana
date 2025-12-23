@@ -3,6 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { Tokenmint } from "../target/types/tokenmint";
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAccount, getAssociatedTokenAddress, getMint, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import BN from "bn.js"
 
 describe("tokenmint", () => {
   // Configure the client to use the local cluster.
@@ -55,7 +56,6 @@ describe("tokenmint", () => {
       mint: mintkeypair.publicKey,
       tokenProgram: TOKEN_PROGRAM_ID
     }).signers([receivermainAccoountkeypair]).rpc({ commitment: "confirmed" });
-    console.log("transaction : " + tx)
 
     //find the ata 
     const associatedTokenAccount = await getAssociatedTokenAddress(
@@ -67,7 +67,6 @@ describe("tokenmint", () => {
 
     //get the account on the ata received 
     const tokenAccount = await getAccount(provider.connection, associatedTokenAccount, "confirmed", TOKEN_PROGRAM_ID)
-    console.log("token account : " + tokenAccount)
   })
 
   //mint tokens 
@@ -84,8 +83,16 @@ describe("tokenmint", () => {
     console.log("token account : ")
     console.log(tokenAccount)
 
-    const tx = await program.methods.minttokens(100).accounts({
-    }).signers().rpc()
+    const tokenAmount = new BN(100)
+    const tx = await program.methods.minttokens(tokenAmount).accounts({
+      signer: receivermainAccoountkeypair.publicKey,
+      tokenAccount: tokenAccount.address,
+      mintaccount: mintkeypair.publicKey,
+      tokenprogram: TOKEN_PROGRAM_ID,
+    }).signers([receivermainAccoountkeypair]).rpc()
+
+    console.log("transaction signature for minting token ")
+    console.log(tx)
   }
   )
 });
