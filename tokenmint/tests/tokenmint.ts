@@ -2,8 +2,10 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Tokenmint } from "../target/types/tokenmint";
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAccount, getAssociatedTokenAddress, getMint, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import BN from "bn.js"
+import { assert } from "chai";
+import { token } from "@coral-xyz/anchor/dist/cjs/utils";
 
 describe("tokenmint", () => {
   // Configure the client to use the local cluster.
@@ -20,12 +22,16 @@ describe("tokenmint", () => {
   }
 
   const receivermainAccoountkeypair = anchor.web3.Keypair.generate();
+
+  //make new keypair for  recipeint in token transfer 
+  const newKeyPair = anchor.web3.Keypair.generate();
+
   before(
     async () => {
       const sign = await provider.connection.requestAirdrop(receivermainAccoountkeypair.publicKey, 30 * anchor.web3.LAMPORTS_PER_SOL)
+      const sign2 = await provider.connection.requestAirdrop(newKeyPair.publicKey, 30 * anchor.web3.LAMPORTS_PER_SOL)
       await provider.connection.confirmTransaction(sign, "confirmed")
-      const balance = await provider.connection.getBalance(mintkeypair.publicKey)
-      console.log(balance)
+      await provider.connection.confirmTransaction(sign2, "confirmed")
     }
   )
 
@@ -95,7 +101,7 @@ describe("tokenmint", () => {
       tokenprogram: TOKEN_PROGRAM_ID,
     }).signers([receivermainAccoountkeypair]).rpc({ commitment: "confirmed" })
 
-    const latestBlockHash = await provider.connection.getLatestBlockhash();
+    const latestBlockHash = await provider.connection.getLatestBlockhash()
 
     //wait for transaction to confirm
     await provider.connection.confirmTransaction({
@@ -110,9 +116,78 @@ describe("tokenmint", () => {
       associatedTokenAccount,
       "confirmed"
     );
+
     //const token account info to check weahter the token received or not  
-    console.log("token account amount : ")
-    console.log(tokenAccountInfo.amount.toString())
+    console.log("token account address : ")
+    console.log(tokenAccountInfo.address)
+
+    const comparingAmount = 100
+    assert.equal(tokenAccountInfo.amount.toString(), comparingAmount.toString())
   }
   )
+
+  //token tranfer function 
+  it("token transfer successful ", async () => {
+    const associatedTokenAccount = await getAssociatedTokenAddress(
+      mintkeypair.publicKey,
+      receivermainAccoountkeypair.publicKey,
+      false,
+      TOKEN_PROGRAM_ID
+    )
+    //get the account on the ata received 
+    const tokenAccount = await getAccount(provider.connection, associatedTokenAccount, "confirmed", TOKEN_PROGRAM_ID)
+
+    const atatx = await program.methods.createAccount().accounts({
+      signer: newKeyPair.publicKey,
+      mint: mintkeypair.publicKey,
+      tokenProgram: TOKEN_PROGRAM_ID
+    }).signers([newKeyPair]).rpc({ commitment: "confirmed" });
+
+    const newAtaAccount = await getAssociatedTokenAddress(
+      mintkeypair.publicKey,
+      newKeyPair.publicKey,
+      false,
+      TOKEN_PROGRAM_ID
+    )
+
+    const recipientATA = await getAccount(
+      provider.connection,
+      newAtaAccount,
+      "confirmed"
+    );
+
+    // call the transfer token function
+    const amount = new BN(50)
+    const tx = await program.methods.transfertoken(amount).accounts({
+      signer: receivermainAccoountkeypair.publicKey,
+      mint: mintkeypair.publicKey,
+      senderTokenAccount: tokenAccount.address,
+      recipientTokenAccount: recipientATA.address,
+      tokenProgram: TOKEN_PROGRAM_ID
+    }).signers([receivermainAccoountkeypair]).rpc()
+
+    const latestBlockHash = await provider.connection.getLatestBlockhash()
+
+    //wait for transaction to confirm
+    await provider.connection.confirmTransaction({
+      blockhash: latestBlockHash.blockhash,
+      lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+      signature: tx,
+    });
+
+    // fetch the token account info again :   NOW it is safe to fetch the account
+    const tokenAccountInfo = await getAccount(
+      provider.connection,
+      associatedTokenAccount,
+      "confirmed"
+    );
+
+    //account info 
+    console.log("finding amount : ")
+    console.log(tokenAccountInfo.amount.toString())
+
+    //amount to compare 
+    const comparingAmount = 50
+    assert.equal(tokenAccountInfo.amount.toString(), comparingAmount.toString())
+  })
 });
