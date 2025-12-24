@@ -29,12 +29,14 @@ describe("tokenmint", () => {
     }
   )
 
+  //to initialized the project 
   it("Is initialized!", async () => {
     // Add your test here.
     const tx = await program.methods.createmint(9).accounts({
+      signer: receivermainAccoountkeypair.publicKey,
       mint: mintkeypair.publicKey,
       tokenProgram: TOKEN_PROGRAM_ID
-    }).signers([mintkeypair]).rpc({ commitment: "confirmed" });
+    }).signers([mintkeypair, receivermainAccoountkeypair]).rpc({ commitment: "confirmed" });
     console.log("Your transaction signature", tx);
 
     // extracting the mint info
@@ -49,6 +51,7 @@ describe("tokenmint", () => {
 
   })
 
+  //create the ata account for 
   it("is creating ata ", async () => {
     //check the balance first 
     const tx = await program.methods.createAccount().accounts({
@@ -57,13 +60,15 @@ describe("tokenmint", () => {
       tokenProgram: TOKEN_PROGRAM_ID
     }).signers([receivermainAccoountkeypair]).rpc({ commitment: "confirmed" });
 
-    //find the ata 
+    //find the ata from the account address 
     const associatedTokenAccount = await getAssociatedTokenAddress(
       mintkeypair.publicKey,
       receivermainAccoountkeypair.publicKey,
       false,
       TOKEN_PROGRAM_ID
     )
+    console.log("associatedTokenAccount")
+    console.log(associatedTokenAccount)
 
     //get the account on the ata received 
     const tokenAccount = await getAccount(provider.connection, associatedTokenAccount, "confirmed", TOKEN_PROGRAM_ID)
@@ -71,28 +76,43 @@ describe("tokenmint", () => {
 
   //mint tokens 
   it("tokens gettting minted ", async () => {
+
     const associatedTokenAccount = await getAssociatedTokenAddress(
       mintkeypair.publicKey,
       receivermainAccoountkeypair.publicKey,
       false,
       TOKEN_PROGRAM_ID
     )
-
     //get the account on the ata received 
     const tokenAccount = await getAccount(provider.connection, associatedTokenAccount, "confirmed", TOKEN_PROGRAM_ID)
-    console.log("token account : ")
-    console.log(tokenAccount)
 
+    //token amount
     const tokenAmount = new BN(100)
     const tx = await program.methods.minttokens(tokenAmount).accounts({
       signer: receivermainAccoountkeypair.publicKey,
       tokenAccount: tokenAccount.address,
       mintaccount: mintkeypair.publicKey,
       tokenprogram: TOKEN_PROGRAM_ID,
-    }).signers([receivermainAccoountkeypair]).rpc()
+    }).signers([receivermainAccoountkeypair]).rpc({ commitment: "confirmed" })
 
-    console.log("transaction signature for minting token ")
-    console.log(tx)
+    const latestBlockHash = await provider.connection.getLatestBlockhash();
+
+    //wait for transaction to confirm
+    await provider.connection.confirmTransaction({
+      blockhash: latestBlockHash.blockhash,
+      lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+      signature: tx,
+    });
+
+    // fetch the token account info again :   NOW it is safe to fetch the account
+    const tokenAccountInfo = await getAccount(
+      provider.connection,
+      associatedTokenAccount,
+      "confirmed"
+    );
+    //const token account info to check weahter the token received or not  
+    console.log("token account amount : ")
+    console.log(tokenAccountInfo.amount.toString())
   }
   )
 });

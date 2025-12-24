@@ -34,7 +34,7 @@ pub mod tokenmint {
             to: ctx.accounts.token_account.to_account_info(),
             authority: ctx.accounts.signer.to_account_info(),
         };
-        let cpi_program_id = ctx.accounts.mintaccount.to_account_info();
+        let cpi_program_id = ctx.accounts.tokenprogram.to_account_info();
         let cpi_context = CpiContext::new(cpi_program_id, cpi_accounts);
         token_interface::mint_to(cpi_context, amount)?;
         Ok(())
@@ -101,6 +101,7 @@ pub struct MintTokens<'info> {
     pub tokenprogram: Interface<'info, TokenInterface>,
 }
 
+//derive account
 #[derive(Accounts)]
 pub struct TransferToken<'info> {
     //who is sending the token
