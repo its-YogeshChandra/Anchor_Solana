@@ -59,7 +59,6 @@ describe("tokenmint", () => {
 
   //create the ata account for 
   it("is creating ata ", async () => {
-    //check the balance first 
     const tx = await program.methods.createAccount().accounts({
       signer: receivermainAccoountkeypair.publicKey,
       mint: mintkeypair.publicKey,
@@ -78,6 +77,14 @@ describe("tokenmint", () => {
 
     //get the account on the ata received 
     const tokenAccount = await getAccount(provider.connection, associatedTokenAccount, "confirmed", TOKEN_PROGRAM_ID)
+
+    //accont info for ata created : 
+    console.log("token account owner : ")
+    console.log(tokenAccount.owner)
+
+    //program id : 
+    console.log("reciever account  : ")
+    console.log(receivermainAccoountkeypair.publicKey)
   })
 
   //mint tokens 
