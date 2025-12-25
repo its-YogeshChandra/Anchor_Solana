@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { VaultProgram } from "../target/types/vault_program";
-import { LAMPORTS_PER_SOL, } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PUBLIC_KEY_LENGTH, PublicKey, } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, getMint, getAccount } from "@solana/spl-token";
 describe("vault-program", () => {
   // Configure the client to use the local cluster.
@@ -38,5 +38,24 @@ describe("vault-program", () => {
     console.log(mintKeyPair.publicKey)
   });
 
+  // create ata using the pda 
+  it("ata is creating ", async () => {
+    //create the seed
+    const seed = [Buffer.from("vault"), userWallet.publicKey.toBuffer()]
+
+    //function to find the pda 
+    const [vaultPDA, vaultBump] = PublicKey.findProgramAddressSync(seed, program.programId)
+
+    //add the user to it 
+    const tx = await program.methods.createAta().accountsPartial({
+      payer: userWallet.publicKey,
+      mint: mintKeyPair.publicKey,
+      tokenAccount: vaultPDA,
+      tokenProgram: TOKEN_PROGRAM_ID
+    }).signers([userWallet]).rpc({ commitment: "confirmed" })
+
+    //add the user to it : 
+    console.log(tx)
+  })
 
 });
