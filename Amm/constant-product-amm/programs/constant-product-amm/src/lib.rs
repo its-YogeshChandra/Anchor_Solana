@@ -145,3 +145,29 @@ pub struct CreateLPPoolState<'info> {
     #[account(init, payer = signer,token::mint = sol_mint, token::authority = pool_account, token::token_program = token_program, seeds = [b"solana_vault", sol_mint.key().as_ref()], bump)]
     pub solana_account: InterfaceAccount<'info, TokenAccount>,
 }
+
+//creete function to fill these account
+#[derive(Accounts)]
+pub struct MintTokensinPool<'info> {
+    #[account(mut)]
+    signer: Signer<'info>,
+
+    #[account(mut)]
+    pub usdc_mint: InterfaceAccount<'info, Mint>,
+    #[account(mut)]
+    pub sol_mint: InterfaceAccount<'info, Mint>,
+
+    #[account(mut)]
+    pub usdc_token_account: InterfaceAccount<'info, TokenAccount>,
+    #[account(mut)]
+    pub sol_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub tokenprogram: Interface<'info, TokenInterface>,
+}
+
+
+
+//implement the cpi function on MintTokensp
+impl<'info> MintTokensinPool<'info> {
+    pub fn mint_tokens(usdc_mint: Pubkey, solana_mint: Pubkey) {
+    }
+}
