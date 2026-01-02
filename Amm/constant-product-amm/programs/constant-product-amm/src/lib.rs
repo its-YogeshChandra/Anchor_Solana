@@ -17,16 +17,6 @@ pub mod constant_product_amm {
     }
 }
 
-#[derive(Accounts)]
-pub struct CreateLpPool {}
-
-pub struct LPShape {
-    token_one_pubkey: Pubkey,
-    token_two_pubkey: Pubkey,
-    lp_token_mint_pubkey: Pubkey,
-    bump_seed: u8,
-}
-
 //function to create mint
 #[derive(Accounts)]
 #[instruction(decimals: u8)]
@@ -71,4 +61,56 @@ pub struct CreateToken<'info> {
     #[account(mut)]
     pub token_acount: InterfaceAccount<'info, TokenAccount>,
     pub token_program: Interface<'info, TokenInterface>,
+}
+
+//lp pool
+
+//account shape for the pool state
+#[account]
+#[derive(InitSpace)]
+pub struct LpPoolAccountShape {
+    usdc_vault_address: Pubkey,
+    sol_vault_address: Pubkey,
+    lp_token_mint: Pubkey,
+}
+
+//deriving function
+#[derive(Accounts)]
+pub struct CreateLPPoolState<'info> {
+    //init a data account on a pda
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    #[account(init , payer = signer, space = 8+LpPoolAccountShape::INIT_SPACE, seeds = [b"lpstate", signer.key.as_ref()], bump)]
+    pub pda_account: Account<'info, LpPoolAccountShape>,
+    pub system_program: Program<'info, System>,
+}
+
+//make impl block and add function to CreateLPPoolState
+
+//usdc vault
+#[derive(Accounts)]
+pub struct UsdcVault<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    pub mint: InterfaceAccount<'info, Mint>,
+
+    //the macro to create  the ata
+    #[account(init, payer = signer, token::mint = mint, token::authority = token_account, token::token_program = token_program, seeds = [b"usdc_vault", signer.key().as_ref()], bump)]
+    pub token_account: InterfaceAccount<'info, TokenAccount>,
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+}
+
+//sol vault
+#[derive(Accounts)]
+pub struct SolVault<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    pub mint: InterfaceAccount<'info, Mint>,
+
+    //create ata
+    #[account(init, payer= signer, token::mint = mint, token::authority = token_account, token::token_program = token_program, seeds = [b"solana_vault", signer.key().as_ref()], bump)]
+    pub token_account: InterfaceAccount<'info, TokenAccount>,
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
 }
