@@ -28,7 +28,8 @@ pub mod constant_product_amm {
     pub fn transfer_function(ctx: Context<TransferToVault>) -> Result<()> {
         //tranfervault,
         //call the function from the struct
-        TransferToVault::mint_tokens();
+        ctx.accounts.mint_tokens()?;
+        Ok(())
     }
 }
 
@@ -144,11 +145,12 @@ pub struct TransferToVault<'info> {
 
 //implement the cpi function on MintTokensp
 impl<'info> TransferToVault<'info> {
-    pub fn mint_tokens(&self) {
+    pub fn mint_tokens(&self) -> Result<()> {
         //do the cpi inside this
         //calling transfer sol and usdc function
-        let _ = Self::transferusdc(&self);
-        let _ = Self::transfersol(&self);
+        self.transferusdc()?;
+        self.transfersol()?;
+        Ok(())
     }
 
     //for usdc
@@ -194,6 +196,51 @@ impl<'info> TransferToVault<'info> {
     }
 }
 
+//how to fix the issue that might work
+#[derive(Accounts)]
+pub struct SwapTokens<'info> {
+    //user wallet
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    //the brain : pool state
+    #[account(mut)]
+    pub pool_state: Account<'info, LpPoolAccountShape>,
+
+    //input vault
+    #[account(mut)]
+    pub input_vault: InterfaceAccount<'info, TokenAccount>,
+
+    //output vault
+    #[account(mut)]
+    pub output_vault: InterfaceAccount<'info, TokenAccount>,
+
+    //user source account
+    #[account(mut)]
+    pub user_source_account: InterfaceAccount<'info, TokenAccount>,
+
+    //user destination account
+    pub user_destination_account: InterfaceAccount<'info, TokenAccount>,
+
+    //token program
+    pub token_program: Interface<'info, TokenInterface>,
+}
+
+impl<'info> SwapTokens<'info> {
+    pub fn swap(&self) -> Result<()> {
+        //check if the input and output vault matches the pools state
+        let usdc_vault_address = self.pool_state.usdc_vault_address;
+        let sol_vault_address = self.pool_state.sol_vault_address;
+        match self.input_vault.key() {
+            usdc_vault_address => Ok(()),
+            sol_vault_address => Ok(()),
+            _ => Ok(()),
+        }
+    }
+}
+
+//
+//
 //deriving function
 //two ways: (i) seperate function, (ii) single function
 //(i)seperate function
