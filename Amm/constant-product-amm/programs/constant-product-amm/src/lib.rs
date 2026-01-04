@@ -111,7 +111,7 @@ pub struct CreateLPPoolState<'info> {
     #[account(init, payer= signer, token::mint = usdc_mint, token::authority = pool_account, token::token_program = token_program, seeds = [b"usdc_vault", usdc_mint.key().as_ref()], bump)]
     pub usdc_account: InterfaceAccount<'info, TokenAccount>,
 
-    //solana vault
+    //wsolana vault
     #[account(init, payer = signer,token::mint = sol_mint, token::authority = pool_account, token::token_program = token_program, seeds = [b"solana_vault", sol_mint.key().as_ref()], bump)]
     pub solana_account: InterfaceAccount<'info, TokenAccount>,
 }
@@ -122,18 +122,19 @@ pub struct TransferToVault<'info> {
     #[account(mut)]
     signer: Signer<'info>,
 
+    //has to be changes cause mint mutate or not
     #[account(mut, seeds= [b"usdc_vault", usdc_mint.key().as_ref()], bump)]
     pub usdc_mint: InterfaceAccount<'info, Mint>,
     #[account(mut, seeds = [b"solana_vault", sol_mint.key().as_ref()], bump)]
     pub sol_mint: InterfaceAccount<'info, Mint>,
 
-    //sender token accounts
+    //sender token accounts(user address)
     #[account(mut)]
     pub sender_usdc_account: InterfaceAccount<'info, TokenAccount>,
     #[account(mut)]
     pub sender_sol_account: InterfaceAccount<'info, TokenAccount>,
 
-    //receiver token accounts
+    //receiver token accounts (vault address)
     #[account(mut)]
     pub receiver_usdc_account: InterfaceAccount<'info, TokenAccount>,
     #[account(mut)]
@@ -220,6 +221,7 @@ pub struct SwapTokens<'info> {
     pub user_source_account: InterfaceAccount<'info, TokenAccount>,
 
     //user destination account
+    #[account(mut)]
     pub user_destination_account: InterfaceAccount<'info, TokenAccount>,
 
     //token program
@@ -229,19 +231,19 @@ pub struct SwapTokens<'info> {
 impl<'info> SwapTokens<'info> {
     pub fn swap(&self) -> Result<()> {
         //check if the input and output vault matches the pools state
-        let usdc_vault_address = self.pool_state.usdc_vault_address;
-        let sol_vault_address = self.pool_state.sol_vault_address;
-        match self.input_vault.key() {
-            usdc_vault_address => Ok(()),
-            sol_vault_address => Ok(()),
-            _ => Ok(()),
-        }
+        // let usdc_vault_address = self.pool_state.usdc_vault_address;
+        // let sol_vault_address = self.pool_state.sol_vault_address;
+        // match self.input_vault.key() {
+        //     usdc_vault_address => Ok(()),
+        //     sol_vault_address => Ok(()),
+        //     _ => Ok(()),
+        // }
     }
 }
 
-//
-//
-//deriving function
+// /Paragraph::new(active_text.as_str())
+//             .block(Block::bordered().title(" Detailed Input (Press 'e' to Edit) ").border_style(Style::default().fg(Color::Yellow)))
+//             .render(chunks[1], buf);/deriving function
 //two ways: (i) seperate function, (ii) single function
 //(i)seperate function
 // #[derive(Accounts)]
