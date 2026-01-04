@@ -233,11 +233,11 @@ impl<'info> SwapTokens<'info> {
         //check if the input and output vault matches the pools state
         // let usdc_vault_address = self.pool_state.usdc_vault_address;
         // let sol_vault_address = self.pool_state.sol_vault_address;
-        // match self.input_vault.key() {
-        //     usdc_vault_address => Ok(()),
-        //     sol_vault_address => Ok(()),
-        //     _ => Ok(()),
-        // }
+        match self.input_vault.key() {
+            usdc_vault_address => Ok(()),
+            sol_vault_address => Ok(()),
+            _ => Ok(()),
+        }
     }
 }
 
