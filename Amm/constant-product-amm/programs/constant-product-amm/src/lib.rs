@@ -206,6 +206,12 @@ pub struct SwapTokens<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
+    #[account(mut)]
+    pub input_mint: InterfaceAccount<'info, Mint>,
+
+    #[account(mut)]
+    pub output_mint: InterfaceAccount<'info, Mint>,
+
     //the brain : pool state
     #[account(mut)]
     pub pool_state: Account<'info, LpPoolAccountShape>,
@@ -249,15 +255,13 @@ impl<'info> SwapTokens<'info> {
         //check for the input account if usdc
         if self.input_vault.key() == self.pool_state.usdc_vault_address {
             //thne the output vault address should be of solana
-            if self.output_vault.key() == self.pool_state.sol_vault_address {
+            if self.output_vault.key() != self.pool_state.sol_vault_address {
                 //if don't then throw the error
                 return err!(SwapError::OutputVaultError);
-                //msg!("output vault is incorrect : {:?}", self.output_vault);
             }
         } else if self.input_vault.key() == self.pool_state.sol_vault_address {
             //then the output vault should be of usdc
-            //require!(self.output_vault.key() == self.pool_state.usdc_vault_address);
-            if self.output_vault.key() == self.pool_state.usdc_vault_address {
+            if self.output_vault.key() != self.pool_state.usdc_vault_address {
                 //if don't then throw the error
                 return err!(SwapError::OutputVaultError);
                 //msg!("output vault is incorrect: {:?}", self.output_vault);
@@ -288,8 +292,47 @@ impl<'info> SwapTokens<'info> {
 
     //main swap function
     pub fn handleswap(&self, amount: u8) {
-        //fix the issue
-        let amountout = 
+        //call the swap formula
+        let output_amount = self.swap_calculation(amount);
+
+        //transfer amount to input vault
+    }
+
+    //swap formula
+    fn swap_calculation(&self, input_amount: u8) -> u128 {
+        //fix the issue;
+        let input_vaultamount = self.input_vault.amount;
+        let output_vaultamount = self.output_vault.amount;
+
+        //product before swap
+        let product_before_swap = (input_vaultamount * output_vaultamount) as u128;
+
+        //formula to calculate output amount
+        let outputamount =
+            (output_vaultamount * input_amount as u64) / (input_vaultamount + input_amount as u64);
+        outputamount as u128
+    }
+    fn tranferamount(&self, output_amount: u128, amounttoswap: u64) -> Result<()> {
+        //extract decimal and set amount
+        let amount = amounttoswap;
+        let decimals = self.input_mint.decimals;
+        let outputdecimals = self.output_mint.decimals;
+
+        //make cpi context for the input tranfer
+        let cpi_accounts = TransferChecked {
+            mint: self.input_mint.to_account_info(),
+            from: self.user_source_account.to_account_info(),
+            to: self.input_vault.to_account_info(),
+            authority: self.signer.to_account_info(),
+        };
+        //access the token program
+        let cpi_program = self.token_program.to_account_info();
+        //build cpi context
+        let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
+
+        //trandfer token to vault 
+        token_interface::transfer_checked(cpi_context, amount, decimals)?;
+        Ok(())
     }
 }
 
