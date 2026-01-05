@@ -1,3 +1,5 @@
+use std::process::Output;
+
 use anchor_lang::{prelude::*, Bump};
 use anchor_spl::{
     token,
@@ -123,9 +125,9 @@ pub struct TransferToVault<'info> {
     signer: Signer<'info>,
 
     //has to be changes cause mint mutate or not
-    #[account(mut, seeds= [b"usdc_vault", usdc_mint.key().as_ref()], bump)]
+    #[account(mut)]
     pub usdc_mint: InterfaceAccount<'info, Mint>,
-    #[account(mut, seeds = [b"solana_vault", sol_mint.key().as_ref()], bump)]
+    #[account(mut)]
     pub sol_mint: InterfaceAccount<'info, Mint>,
 
     //sender token accounts(user address)
@@ -135,9 +137,9 @@ pub struct TransferToVault<'info> {
     pub sender_sol_account: InterfaceAccount<'info, TokenAccount>,
 
     //receiver token accounts (vault address)
-    #[account(mut)]
+    #[account(mut, seeds = [b"usdc_vault", usdc_mint.key().as_ref()], bump)]
     pub receiver_usdc_account: InterfaceAccount<'info, TokenAccount>,
-    #[account(mut)]
+    #[account(mut, seeds = [b"solana_vault", sol_mint.key().as_ref()], bump)]
     pub receiver_sol_account: InterfaceAccount<'info, TokenAccount>,
 
     //token program used
@@ -228,16 +230,66 @@ pub struct SwapTokens<'info> {
     pub token_program: Interface<'info, TokenInterface>,
 }
 
+#[error_code]
+pub enum SwapError {
+    #[msg("output vault is incorrect")]
+    OutputVaultError,
+    #[msg("input vault is incorrect")]
+    InputVaaultError,
+    #[msg("swap amnount is more then account balance")]
+    AmountError,
+    #[msg("slippag limit exceeds")]
+    SlippageError,
+}
+
 impl<'info> SwapTokens<'info> {
-    pub fn swap(&self) -> Result<()> {
+    pub fn init_swap(&self, amount: u8) -> Result<()> {
         //check if the input and output vault matches the pools state
-        // let usdc_vault_address = self.pool_state.usdc_vault_address;
-        // let sol_vault_address = self.pool_state.sol_vault_address;
-        match self.input_vault.key() {
-            usdc_vault_address => Ok(()),
-            sol_vault_address => Ok(()),
-            _ => Ok(()),
-        }
+
+        //check for the input account if usdc
+        if self.input_vault.key() == self.pool_state.usdc_vault_address {
+            //thne the output vault address should be of solana
+            if self.output_vault.key() == self.pool_state.sol_vault_address {
+                //if don't then throw the error
+                return err!(SwapError::OutputVaultError);
+                //msg!("output vault is incorrect : {:?}", self.output_vault);
+            }
+        } else if self.input_vault.key() == self.pool_state.sol_vault_address {
+            //then the output vault should be of usdc
+            //require!(self.output_vault.key() == self.pool_state.usdc_vault_address);
+            if self.output_vault.key() == self.pool_state.usdc_vault_address {
+                //if don't then throw the error
+                return err!(SwapError::OutputVaultError);
+                //msg!("output vault is incorrect: {:?}", self.output_vault);
+            }
+        } else {
+            //throw error in the
+            return err!(SwapError::InputVaaultError);
+            // msg!("input vault wring: {:?}", self.input_vault)
+        };
+
+        //for the fix the issue :
+        Ok(())
+    }
+
+    pub fn checks(&self, amount: u8) -> Result<()> {
+        //set the algorithm = constant product
+        if !self.user_source_account.amount as u8 > amount {
+            //throw error
+            return err!(SwapError::AmountError);
+        };
+        Ok(())
+    }
+
+    //fee handler
+    pub fn handlefee(&self, amount: u8) {
+        //deduct the amount from the user and
+    }
+
+    //main swap function
+    pub fn handleswap(&self, amount: u8) {
+        //fix the issue
+        let amountout = 
     }
 }
 
