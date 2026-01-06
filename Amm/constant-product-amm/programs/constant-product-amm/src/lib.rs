@@ -33,6 +33,19 @@ pub mod constant_product_amm {
         ctx.accounts.mint_tokens()?;
         Ok(())
     }
+
+    //swap function
+    pub fn swap_function(ctx: Context<SwapTokens>, amount: u64) -> Result<()> {
+        //call the function on the struct
+        ctx.accounts.init_swap(amount)?;
+        //call the cheks function
+        ctx.accounts.checks(amount)?;
+
+        //the main swap function
+        ctx.accounts.handleswap(amount);
+
+        Ok(())
+    }
 }
 
 //function to create mint
@@ -249,7 +262,7 @@ pub enum SwapError {
 }
 
 impl<'info> SwapTokens<'info> {
-    pub fn init_swap(&self, amount: u8) -> Result<()> {
+    pub fn init_swap(&self, amount: u64) -> Result<()> {
         //check if the input and output vault matches the pools state
 
         //check for the input account if usdc
@@ -276,9 +289,9 @@ impl<'info> SwapTokens<'info> {
         Ok(())
     }
 
-    pub fn checks(&self, amount: u8) -> Result<()> {
+    pub fn checks(&self, amount: u64) -> Result<()> {
         //set the algorithm = constant product
-        if !self.user_source_account.amount as u8 > amount {
+        if !self.user_source_account.amount as u64 > amount {
             //throw error
             return err!(SwapError::AmountError);
         };
@@ -286,32 +299,35 @@ impl<'info> SwapTokens<'info> {
     }
 
     //fee handler
-    pub fn handlefee(&self, amount: u8) {
+    pub fn handlefee(&self, amount: u64) {
         //deduct the amount from the user and
     }
 
     //main swap function
-    pub fn handleswap(&self, amount: u8) {
+    pub fn handleswap(&self, amount: u64) {
         //call the swap formula
         let output_amount = self.swap_calculation(amount);
 
         //transfer amount to input vault
+        let _ = self.tranferamount(output_amount, amount as u64);
     }
 
     //swap formula
-    fn swap_calculation(&self, input_amount: u8) -> u128 {
+    fn swap_calculation(&self, input_amount: u64) -> u128 {
         //fix the issue;
-        let input_vaultamount = self.input_vault.amount;
-        let output_vaultamount = self.output_vault.amount;
+        let input_vaultamount = self.input_vault.amount as u128;
+        let output_vaultamount = self.output_vault.amount as u128;
 
         //product before swap
         let product_before_swap = (input_vaultamount * output_vaultamount) as u128;
 
         //formula to calculate output amount
-        let outputamount =
-            (output_vaultamount * input_amount as u64) / (input_vaultamount + input_amount as u64);
+        let outputamount = (output_vaultamount * input_amount as u128)
+            / (input_vaultamount + input_amount as u128);
         outputamount as u128
     }
+
+    //function that transfering amount
     fn tranferamount(&self, output_amount: u128, amounttoswap: u64) -> Result<()> {
         //extract decimal and set amount
         let amount = amounttoswap;
@@ -330,8 +346,40 @@ impl<'info> SwapTokens<'info> {
         //build cpi context
         let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
 
-        //trandfer token to vault 
+        //trandfer token to vault
         token_interface::transfer_checked(cpi_context, amount, decimals)?;
+
+        //seed for the pool
+        let seeds = [
+            b"lpstate",
+            self.pool_state.usdc_mint.as_ref(),
+            self.pool_state.sol_mint.as_ref(),
+            &[self.pool_state.bump],
+        ];
+
+        //the main signer seed
+        let signer_seeds = &[&seeds[..]];
+
+        //make cpi context for the output transfer
+        let output_cpi_accounts = TransferChecked {
+            mint: self.output_mint.to_account_info(),
+            from: self.output_vault.to_account_info(),
+            to: self.user_destination_account.to_account_info(),
+            authority: self.pool_state.to_account_info(),
+        };
+
+        //program and cpi context for output
+        let output_cpi_program = self.token_program.to_account_info();
+        let output_cpi_context =
+            CpiContext::new_with_signer(output_cpi_program, output_cpi_accounts, signer_seeds);
+
+        //transfer token from vault to user account
+        token_interface::transfer_checked(
+            output_cpi_context,
+            output_amount as u64,
+            outputdecimals,
+        )?;
+
         Ok(())
     }
 }
