@@ -12,6 +12,10 @@ describe("constant-product-amm", () => {
   //const keypair for user 
   const user_keypair = anchor.web3.Keypair.generate();
 
+  //usdc mint address 
+  const usdc_mint_address = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"
+  const sol_mint_address = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"
+
   // before(async () => {
   //   await provider.connection.requestAirdrop(user_keypair.publicKey, )
   // })

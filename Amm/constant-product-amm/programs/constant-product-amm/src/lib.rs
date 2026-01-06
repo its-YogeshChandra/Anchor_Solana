@@ -161,18 +161,17 @@ pub struct TransferToVault<'info> {
 
 //implement the cpi function on MintTokensp
 impl<'info> TransferToVault<'info> {
-    pub fn mint_tokens(&self) -> Result<()> {
+    pub fn mint_tokens(&self, sol_amount: u64, usdc_amount: u64) -> Result<()> {
         //do the cpi inside this
         //calling transfer sol and usdc function
-        self.transferusdc()?;
-        self.transfersol()?;
+        self.transferusdc(usdc_amount)?;
+        self.transfersol(sol_amount)?;
         Ok(())
     }
 
     //for usdc
-    fn transferusdc(&self) -> Result<()> {
+    fn transferusdc(&self, usdc_amount: u64) -> Result<()> {
         //extract decimal and set amount
-        let amount = 100;
         let decimals = self.usdc_mint.decimals;
         let cpi_accounts = TransferChecked {
             mint: self.usdc_mint.to_account_info(),
@@ -186,14 +185,13 @@ impl<'info> TransferToVault<'info> {
         let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
 
         //trandfer token
-        token_interface::transfer_checked(cpi_context, amount, decimals)?;
+        token_interface::transfer_checked(cpi_context, usdc_amount, decimals)?;
         Ok(())
     }
 
     //for solana
-    fn transfersol(&self) -> Result<()> {
+    fn transfersol(&self, sol_amount: u64) -> Result<()> {
         //extract decimal and set amount
-        let amount = 3;
         let decimals = self.sol_mint.decimals;
         let cpi_accounts = TransferChecked {
             mint: self.sol_mint.to_account_info(),
@@ -207,7 +205,7 @@ impl<'info> TransferToVault<'info> {
         let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
 
         //trandfer token
-        token_interface::transfer_checked(cpi_context, amount, decimals)?;
+        token_interface::transfer_checked(cpi_context, sol_amount, decimals)?;
         Ok(())
     }
 }
