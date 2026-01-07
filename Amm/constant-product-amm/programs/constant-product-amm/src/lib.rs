@@ -27,10 +27,14 @@ pub mod constant_product_amm {
     }
 
     //transfer function
-    pub fn transfer_function(ctx: Context<TransferToVault>) -> Result<()> {
+    pub fn transfer_function(
+        ctx: Context<TransferToVault>,
+        sol_amount: u64,
+        usdc_amount: u64,
+    ) -> Result<()> {
         //tranfervault,
         //call the function from the struct
-        ctx.accounts.mint_tokens()?;
+        ctx.accounts.mint_tokens(sol_amount, usdc_amount)?;
         Ok(())
     }
 
@@ -137,16 +141,14 @@ pub struct TransferToVault<'info> {
     #[account(mut)]
     signer: Signer<'info>,
 
-    //has to be changes cause mint mutate or not
-    #[account(mut)]
+    //don't use mutate cause the function is tranfering not creating
     pub usdc_mint: InterfaceAccount<'info, Mint>,
-    #[account(mut)]
     pub sol_mint: InterfaceAccount<'info, Mint>,
 
     //sender token accounts(user address)
-    #[account(mut)]
+    #[account(mut, token::mint =  usdc_mint, token::authority = signer)]
     pub sender_usdc_account: InterfaceAccount<'info, TokenAccount>,
-    #[account(mut)]
+    #[account(mut, token::mint = sol_mint, token::authority = signer)]
     pub sender_sol_account: InterfaceAccount<'info, TokenAccount>,
 
     //receiver token accounts (vault address)
@@ -199,6 +201,7 @@ impl<'info> TransferToVault<'info> {
             to: self.receiver_sol_account.to_account_info(),
             authority: self.signer.to_account_info(),
         };
+
         //access the token program
         let cpi_program = self.tokenprogram.to_account_info();
         //build cpi context
@@ -290,8 +293,10 @@ impl<'info> SwapTokens<'info> {
     pub fn checks(&self, amount: u64) -> Result<()> {
         //set the algorithm = constant product
         if !self.user_source_account.amount as u64 > amount {
-            //throw error
+            //throw erro
             return err!(SwapError::AmountError);
+
+            //msg!("the user amount is : {}")
         };
         Ok(())
     }
