@@ -14,15 +14,17 @@ pub mod constant_product_amm {
 
     use super::*;
 
-    pub fn initialize(ctx: Context<LpTokenMint>) -> Result<()> {
-        let mintpda = msg!("Greetings from: {:?}", ctx.program_id);
-        Ok(())
-    }
-
     //first function
     pub fn first_function(ctx: Context<CreateLPPoolState>) -> Result<()> {
-        //fix the issue
-        msg!(" issue : {:?}", ctx.accounts.system_program.key());
+        let pool = &mut ctx.accounts.pool_account;
+        // THIS LINE IS MANDATORY
+        pool.bump = ctx.bumps.pool_account;
+
+        // ... rest of your code ...
+        pool.usdc_mint = ctx.accounts.usdc_mint.key();
+        pool.sol_mint = ctx.accounts.sol_mint.key();
+        pool.usdc_vault_address = ctx.accounts.usdc_account.key();
+        pool.sol_vault_address = ctx.accounts.solana_account.key();
         Ok(())
     }
 
@@ -43,7 +45,7 @@ pub mod constant_product_amm {
         //call the function on the struct
         ctx.accounts.init_swap(amount)?;
         //call the cheks function
-        ctx.accounts.checks(amount)?;
+        // ctx.accounts.checks(amount)?;
 
         //the main swap function
         ctx.accounts.handleswap(amount);
@@ -239,11 +241,11 @@ pub struct SwapTokens<'info> {
     pub output_vault: InterfaceAccount<'info, TokenAccount>,
 
     //user source account
-    #[account(mut)]
+    #[account(mut, token::mint = input_mint, token::authority = signer)]
     pub user_source_account: InterfaceAccount<'info, TokenAccount>,
 
     //user destination account
-    #[account(mut)]
+    #[account(mut , token::mint = output_mint, token::authority = signer)]
     pub user_destination_account: InterfaceAccount<'info, TokenAccount>,
 
     //token program
@@ -258,7 +260,7 @@ pub enum SwapError {
     InputVaaultError,
     #[msg("swap amnount is more then account balance")]
     AmountError,
-    #[msg("slippag limit exceeds")]
+    #[msg("slippage limit exceeds")]
     SlippageError,
 }
 
@@ -292,7 +294,7 @@ impl<'info> SwapTokens<'info> {
 
     pub fn checks(&self, amount: u64) -> Result<()> {
         //set the algorithm = constant product
-        if !self.user_source_account.amount as u64 > amount {
+        if self.user_source_account.amount < amount {
             //throw erro
             return err!(SwapError::AmountError);
 
