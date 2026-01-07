@@ -4,6 +4,7 @@ import { ConstantProductAmm } from "../target/types/constant_product_amm";
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, } from "@solana/web3.js";
 import { getMint, TOKEN_PROGRAM_ID, getAccount, createAssociatedTokenAccount, createAssociatedTokenAccountInstruction, amountToUiAmountForInterestBearingMintWithoutSimulation, getAssociatedTokenAddress, createSyncNativeInstruction } from "@solana/spl-token"
 import { assert } from "chai";
+import { BN } from "bn.js";
 
 describe("constant-product-amm", () => {
   // Configure the client to use the local cluster.
@@ -145,6 +146,15 @@ describe("constant-product-amm", () => {
     if (!userUSDCAccount) {
       throw console.error("not able to find usdc account")
     }
+
+    //sol amount 
+    const sol_amount = new BN(4).mul(new BN(10).pow(new BN(9)));
+
+    //usdc amount 
+    const usdc_amount = new BN(400).mul(new BN(10).pow(new BN(6)));
+
+    //find add liquidity 
+
   })
 
 
